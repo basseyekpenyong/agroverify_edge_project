@@ -8,12 +8,12 @@
 
 AgroVerify Edge is a B2B mobile-first infrastructure platform designed for agricultural supply chains operating in low-connectivity environments across emerging markets.
 
-The platform enables field buying agents, commodity aggregators, cooperatives, and enterprise agribusinesses to securely capture, validate, and synchronize transaction data using offline-first workflows and on-device artificial intelligence.
+The platform lets field buying agents, commodity aggregators, cooperatives, and enterprise agribusinesses securely capture, validate, and sync transaction data using offline-first workflows and on-device AI.
 
-AgroVerify Edge addresses critical supply chain problems including:
+AgroVerify Edge addresses critical supply chain problems, including:
 
 - Manual entry errors and commodity fraud
-- No internet connectivity at point of capture
+- No internet connectivity at the point of capture
 - No tamper-evident transaction records
 - Delayed reporting and zero traceability
 
@@ -39,7 +39,7 @@ Supports local African language processing:
 - Yoruba
 - Nigerian Pidgin English
 
-Using Whisper Tiny (INT8 quantized) running fully offline on-device.
+Using Whisper Tiny (INT8 quantized), running fully offline on-device.
 
 ### Visual Verification System
 
@@ -47,7 +47,7 @@ Capture and validate per transaction:
 
 - Commodity photos (AI-classified on-device)
 - Weighing scale proof
-- GPS coordinates with accuracy indicator
+- GPS coordinates with an accuracy indicator
 - UTC timestamp
 - Delivery evidence
 
@@ -60,13 +60,13 @@ Each transaction generates a SHA-256 hash combining:
 - UTC timestamp
 - Agent ID
 
-The same hash is recomputed on the cloud backend at sync time. Any mismatch triggers an integrity alert to the system administrator within 60 seconds.
+The same hash is recomputed on the cloud backend at the time of sync. Any mismatch triggers an integrity alert to the system administrator within 60 seconds.
 
 ### Edge AI — Voice & Vision
 
 - **Voice:** Whisper Tiny → TFLite INT8, offline speech-to-text in 4 languages
 - **Vision:** MobileNetV3 → ONNX → TFLite INT8, classifies 10+ commodity types
-- Both models fit within 50MB on-device storage
+- Both models fit within 50MB of on-device storage
 - OTA model update support (no app store release required)
 
 ### Smart Background Synchronization
@@ -86,7 +86,7 @@ The same hash is recomputed on the cloud backend at sync time. Any mismatch trig
 Android Device
   React Native UI
     ↓
-  Redux Store (auth / transactions / sync)
+  Redux Store (auth / transactions/sync)
     ↓
   SQLite — AES-256 encrypted (SQLCipher)
     ↓
@@ -311,7 +311,7 @@ pip install -r requirements.txt
 
 ## Use Cases
 
-- Agricultural commodity verification at farm gate
+- Agricultural commodity verification at the farm gate
 - Cooperative transaction management
 - Rural logistics tracking
 - FMCG procurement systems
@@ -334,9 +334,9 @@ pip install -r requirements.txt
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature`
+2. Create a feature branch: `git checkout -b feature/your-feature.`
 3. Commit your changes: `git commit -m "Add your feature"`
-4. Push to your branch: `git push origin feature/your-feature`
+4. Push to your branch: `git push origin feature/your-feature.`
 5. Open a Pull Request
 
 ---
