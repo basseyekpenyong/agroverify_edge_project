@@ -1,11 +1,10 @@
-# agroverify_edge_project
-# 🌾 AgroVerify Edge
+# AgroVerify Edge
 
 > Offline-first multimodal agricultural supply chain verification platform powered by Edge AI.
 
 ---
 
-## 📌 Overview
+## Overview
 
 AgroVerify Edge is a B2B mobile-first infrastructure platform designed for agricultural supply chains operating in low-connectivity environments across emerging markets.
 
@@ -13,412 +12,347 @@ The platform enables field buying agents, commodity aggregators, cooperatives, a
 
 AgroVerify Edge addresses critical supply chain problems including:
 
-* Manual entry errors
-* Commodity fraud
-* Quality manipulation
-* Lack of traceability
-* Connectivity limitations
-* Delayed reporting systems
+- Manual entry errors and commodity fraud
+- No internet connectivity at point of capture
+- No tamper-evident transaction records
+- Delayed reporting and zero traceability
 
 By combining multimodal AI (voice + vision), secure local databases, and lightweight edge computing, AgroVerify Edge creates a tamper-resistant operational verification layer for agricultural commerce.
 
 ---
 
-# 🚀 Core Features
+## Core Features
 
-## ✅ Offline-First Architecture
+### Offline-First Architecture
 
-* Full operation without internet access
-* Local SQLite transaction storage
-* Background synchronization when connectivity returns
-* Rural deployment optimized
+- Full operation without internet access
+- Local SQLite database with AES-256 encryption (SQLCipher)
+- Background synchronization when connectivity returns
+- Optimized for rural low-connectivity deployment
 
----
+### Multilingual Voice Processing
 
-## 🎤 Multilingual Voice Processing
+Supports local African language processing:
 
-Supports local African language processing, including:
+- Hausa
+- Igbo
+- Yoruba
+- Nigerian Pidgin English
 
-* Hausa
-* Igbo
-* Yoruba
-* Pidgin English
+Using Whisper Tiny (INT8 quantized) running fully offline on-device.
 
-Features include:
+### Visual Verification System
 
-* Voice-to-text field logging
-* Local dialect support
-* Offline speech recognition
-* AI-powered transcription
+Capture and validate per transaction:
 
----
+- Commodity photos (AI-classified on-device)
+- Weighing scale proof
+- GPS coordinates with accuracy indicator
+- UTC timestamp
+- Delivery evidence
 
-## 📷 Visual Verification System
+### Data Integrity Protection
 
-Capture and validate:
+Each transaction generates a SHA-256 hash combining:
 
-* Commodity images
-* Weighing scale proof
-* GPS coordinates
-* Timestamp verification
-* Delivery evidence
+- Weight
+- GPS coordinates (lat/lng to 6 decimal places)
+- UTC timestamp
+- Agent ID
 
----
+The same hash is recomputed on the cloud backend at sync time. Any mismatch triggers an integrity alert to the system administrator within 60 seconds.
 
-## 🔐 Data Integrity Protection
+### Edge AI — Voice & Vision
 
-AgroVerify Edge implements cryptographic transaction hashing to prevent fraud and tampering.
+- **Voice:** Whisper Tiny → TFLite INT8, offline speech-to-text in 4 languages
+- **Vision:** MobileNetV3 → ONNX → TFLite INT8, classifies 10+ commodity types
+- Both models fit within 50MB on-device storage
+- OTA model update support (no app store release required)
 
-Each transaction securely hashes:
+### Smart Background Synchronization
 
-* Weight values
-* GPS coordinates
-* Timestamp metadata
-
-Any unauthorized modification triggers integrity mismatch detection.
-
----
-
-## ⚡ Edge AI Optimization
-
-Optimized for mid-range Android devices using:
-
-* INT8 quantization
-* TensorFlow Lite
-* LiteRT
-* Lightweight compressed AI models
-
-Benefits include:
-
-* Faster inference
-* Lower battery consumption
-* Reduced memory footprint
-* Fully offline execution
+- Android WorkManager background sync job (non-blocking)
+- Network-aware: fires automatically on connectivity restore
+- Partial sync: only unsynced records transmitted
+- Exponential backoff retry (max 5 attempts)
+- ERP webhook notifications within 60 seconds of verified sync
+- TLS 1.2+ encrypted transmission
 
 ---
 
-## 🔄 Smart Background Synchronization
+## System Architecture
 
-* Automatic retry queues
-* Network-aware sync engine
-* ERP integration support
-* Linear / MCP workflow connectivity
-* Secure telemetry transmission
+```
+Android Device
+  React Native UI
+    ↓
+  Redux Store (auth / transactions / sync)
+    ↓
+  SQLite — AES-256 encrypted (SQLCipher)
+    ↓
+  SHA-256 Hash Engine  ←→  TFLite INT8 AI Models
+    ↓
+  Background Sync Worker (WorkManager)
+    ↓  (TLS 1.2+, when online)
 
----
-
-# 🏗️ System Architecture
-
-```text
-+----------------------------------------------------+
-|                AgroVerify Edge                     |
-+----------------------------------------------------+
-|                                                    |
-|  Mobile Frontend (Flutter / React Native)          |
-|        ↓                                           |
-|  Local SQLite Database                             |
-|        ↓                                           |
-|  On-Device AI Models (TFLite / LiteRT)             |
-|        ↓                                           |
-|  Verification & Hashing Engine                     |
-|        ↓                                           |
-|  Background Sync Worker                            |
-|        ↓                                           |
-|  Cloud ERP / Linear / MCP APIs                     |
-|                                                    |
-+----------------------------------------------------+
+Cloud Backend (Go + Gin)
+  POST /api/v1/transactions/batch
+    ↓
+  SHA-256 Re-verification
+    ↓              ↓ mismatch
+  PostgreSQL    Integrity Alert → Admin (60s)
+    ↓
+  ERP Webhook
+    ↓
+  GET /api/v1/models/latest  (OTA model updates)
 ```
 
 ---
 
-# 🧠 AI & Machine Learning Pipeline
+## Technology Stack
 
-AgroVerify Edge uses compressed multimodal machine learning pipelines optimized for edge deployment.
+### Mobile App
 
-### Workflow
+| Layer | Technology |
+|---|---|
+| Framework | React Native 0.76 (TypeScript) |
+| Navigation | React Navigation v6 |
+| State management | Redux Toolkit |
+| Local database | SQLite + SQLCipher (AES-256) |
+| AI inference | TensorFlow Lite INT8 |
+| GPS | react-native-geolocation-service |
+| Camera | react-native-image-picker |
+| Voice | react-native-audio-recorder-player + Whisper Tiny |
+| Sync worker | react-native-background-fetch + Android WorkManager |
+| Hashing | crypto-js (SHA-256) |
 
-1. Build PyTorch model
+### Backend API
+
+| Layer | Technology |
+|---|---|
+| Language | Go 1.23 |
+| Framework | Gin |
+| Database | PostgreSQL 16 |
+| Auth | JWT (golang-jwt/jwt) |
+| Migrations | golang-migrate |
+| Containerization | Docker |
+
+### AI / Machine Learning
+
+| Component | Technology |
+|---|---|
+| Model training | PyTorch + MobileNetV3 |
+| Export pipeline | PyTorch → ONNX → TensorFlow → TFLite |
+| Quantization | INT8 post-training quantization |
+| Voice model | OpenAI Whisper Tiny |
+| On-device runtime | TensorFlow Lite |
+
+### DevOps
+
+- GitHub Actions CI (lint + test + Docker build on every PR)
+- Docker Compose (local backend + PostgreSQL)
+- Planned: Cloud deployment (GCP / AWS)
+
+---
+
+## AI Model Pipeline
+
+```
+1. Train MobileNetV3 in PyTorch (10 commodity classes)
 2. Export to ONNX
-3. Convert to TensorFlow
-4. Apply INT8 quantization
-5. Export `.tflite` model
-6. Deploy on Android edge devices
-
----
-
-# 🛠️ Technology Stack
-
-## Mobile Development
-
-* Flutter
-* React Native
-* Kotlin
-
-## Backend & APIs
-
-* Python
-* FastAPI
-* REST APIs
-* MCP Integration
-
-## AI / Machine Learning
-
-* PyTorch
-* TensorFlow Lite
-* LiteRT
-* Whisper Tiny
-* Quantized NLP models
-
-## Database
-
-* SQLite
-* Local encrypted storage
-
-## DevOps
-
-* GitHub
-* Docker
-* CI/CD Pipelines
-
----
-
-# 📅 Development Roadmap
-
-## Phase 1 — Local Data Engine
-
-* Mobile UI architecture
-* Offline SQLite implementation
-* Outdoor optimized interface
-
-## Phase 2 — AI Compression & Quantization
-
-* Lightweight speech model deployment
-* INT8 quantization
-* Audio buffering optimization
-
-## Phase 3 — Synchronization & ERP Integration
-
-* Background sync engine
-* ERP workflow integration
-* Anomaly detection system
-
-## Phase 4 — Enterprise Deployment
-
-* Corporate pilot programs
-* Fraud reduction analytics
-* Subscription monetization
-
----
-
-# 🔐 Security & Integrity Protocol
-
-To prevent malicious edits and commodity fraud:
-
-* Transactions are hashed locally before syncing
-* Hash includes:
-
-  * Weight
-  * GPS coordinates
-  * Timestamp
-* Integrity mismatches trigger alerts for administrative review
-
-This creates a tamper-evident agricultural verification system.
-
----
-
-# 📦 Installation
-
-## Clone Repository
-
-```bash
-git clone https://github.com/yourusername/agroverify-edge.git
-cd agroverify-edge
+3. Convert ONNX → TensorFlow SavedModel (onnx-tf)
+4. Apply INT8 post-training quantization
+5. Export .tflite with class label metadata
+6. Bundle in mobile app / serve via OTA update endpoint
 ```
 
 ---
 
-## Create Virtual Environment
+## Project Structure
 
-```bash
-python -m venv venv
 ```
-
----
-
-## Activate Environment
-
-### Windows
-
-```bash
-venv\Scripts\activate
-```
-
-### Linux / macOS
-
-```bash
-source venv/bin/activate
-```
-
----
-
-## Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-# ▶️ Running the Project
-
-## Backend
-
-```bash
-python app.py
-```
-
-## Flutter App
-
-```bash
-flutter run
-```
-
----
-
-# 📂 Suggested Project Structure
-
-```text
-agroverify-edge/
+agroverify_edge_project/
 │
-├── mobile-app/
-├── backend/
-├── ai-models/
-├── quantization/
-├── database/
-├── sync-engine/
+├── mobile-app/                    # React Native app
+│   ├── src/
+│   │   ├── screens/               # Login, Home, Transaction, Sync, Settings
+│   │   ├── navigation/            # Stack + Tab navigator (RBAC guards)
+│   │   ├── store/                 # Redux slices (auth, transactions, sync)
+│   │   ├── services/database/     # SQLite DAO + schema
+│   │   ├── utils/hashEngine.ts    # SHA-256 integrity hash
+│   │   ├── constants/             # Colors, commodities, languages
+│   │   └── types/                 # Shared TypeScript types
+│   ├── package.json
+│   └── tsconfig.json
+│
+├── backend/                       # Go + Gin REST API
+│   ├── cmd/server/main.go         # Entry point + routes
+│   ├── internal/
+│   │   ├── handlers/              # Transaction batch sync, agents, alerts
+│   │   ├── middleware/            # JWT auth, RBAC, CORS
+│   │   └── models/                # Transaction, Agent structs
+│   ├── pkg/crypto/hash.go         # SHA-256 (matches mobile canonical format)
+│   ├── migrations/                # PostgreSQL schema
+│   ├── Dockerfile
+│   └── go.mod
+│
+├── ai-models/                     # ML training + export pipeline
+│   ├── vision/commodity_classifier/
+│   │   ├── train.py               # PyTorch MobileNetV3 training
+│   │   └── export_tflite.py       # ONNX → TFLite INT8 export
+│   └── requirements.txt
+│
 ├── docs/
-├── tests/
-├── requirements.txt
+│   └── architecture.md
+│
+├── .github/workflows/ci.yml       # GitHub Actions CI
+├── docker-compose.yml             # Local backend + PostgreSQL
+├── .gitignore
+├── REQUIREMENTS.md                # Full Software Requirements Specification
 └── README.md
 ```
 
 ---
 
-# 🌍 Use Cases
+## Development Roadmap
 
-* Agricultural commodity verification
-* Cooperative transaction management
-* Rural logistics tracking
-* FMCG procurement systems
-* Offline field operations
-* Fraud reduction in supply chains
+### Milestone 1 — 2-Week MVP (Jun 2026)
+
+- System architecture & security design
+- Flutter app scaffold with routing and RBAC stubs
+- AES-256 encrypted SQLite database
+- Transaction capture UI (commodity, weight, GPS, images)
+- SHA-256 integrity hash engine
+- Outdoor high-contrast UI theme
+
+### Milestone 2 — Edge AI Foundation (Jul 2026)
+
+- Whisper Tiny offline speech-to-text (Hausa, Igbo, Yoruba, Pidgin)
+- Commodity image classifier (PyTorch → TFLite INT8)
+- OTA model update system
+
+### Milestone 3 — Sync & ERP Integration (Sep 2026)
+
+- Go + Gin backend with PostgreSQL
+- Android WorkManager background sync
+- ERP webhook notifications
+- End-to-end hash integrity verification
+
+### Milestone 4 — Enterprise Hardening (Nov 2026)
+
+- Full RBAC enforcement
+- Cooperative Manager reporting dashboard
+- OWASP Mobile Top 10 security audit
+
+### Milestone 5 — Production Launch (Dec 2026)
+
+- Corporate pilot program (up to 3 cooperatives)
+- Fraud reduction analytics dashboard
 
 ---
 
-# 💡 Future Enhancements
+## Security & Integrity Protocol
 
-* Blockchain audit trails
-* Satellite connectivity fallback
-* AI quality grading
-* QR/NFC commodity tagging
-* Biometric field verification
-* Real-time fraud scoring
+- Transactions hashed on-device (SHA-256) before sync
+- Hash recomputed on backend at ingest — mismatch = integrity alert
+- Local database encrypted at rest (AES-256 via SQLCipher)
+- API credentials stored in Android Hardware Keystore
+- All cloud communication over TLS 1.2+
+- OWASP Mobile Top 10 audit before production release
 
 ---
 
-# 🤝 Contributing
+## Getting Started
 
-Contributions are welcome.
+### Prerequisites
 
-To contribute:
+| Tool | Version | Download |
+|---|---|---|
+| Node.js | 20 LTS | nodejs.org |
+| React Native CLI | latest | `npm i -g react-native` |
+| Go | 1.23+ | go.dev/dl |
+| Android Studio | latest | developer.android.com |
+| Docker Desktop | latest | docker.com |
+| Python | 3.11+ | python.org (for AI models) |
+
+### Clone the Repository
+
+```bash
+git clone https://github.com/basseyekpenyong/agroverify_edge_project.git
+cd agroverify_edge_project
+```
+
+### Start the Backend (Docker)
+
+```bash
+docker compose up
+```
+
+Backend runs at `http://localhost:8080`. PostgreSQL runs at `localhost:5432`.
+
+### Run the Mobile App
+
+```bash
+cd mobile-app
+npm install
+npx react-native run-android
+```
+
+### Set Up AI Models
+
+```bash
+cd ai-models
+python -m venv venv
+venv\Scripts\activate       # Windows
+pip install -r requirements.txt
+```
+
+---
+
+## Use Cases
+
+- Agricultural commodity verification at farm gate
+- Cooperative transaction management
+- Rural logistics tracking
+- FMCG procurement systems
+- Offline field agent operations
+- Fraud reduction in agricultural supply chains
+
+---
+
+## Future Enhancements
+
+- Blockchain audit trails
+- Satellite connectivity fallback (Starlink)
+- AI quality grading (grade A/B/C)
+- QR/NFC commodity tagging
+- Biometric field agent verification
+- Real-time fraud scoring engine
+
+---
+
+## Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to your branch
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Commit your changes: `git commit -m "Add your feature"`
+4. Push to your branch: `git push origin feature/your-feature`
 5. Open a Pull Request
 
 ---
 
-# 📄 License
+## License
 
 MIT License
 
 ---
 
-# 👨‍💻 Author
+## Author
 
 Developed as part of the AgroVerify Edge Project — building offline-first verification infrastructure for emerging-market agricultural supply chains.
 
 ---
 
-# ⭐ Vision
+## Vision
 
 AgroVerify Edge aims to become the trusted infrastructure layer for secure agricultural transactions across low-connectivity regions worldwide.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    

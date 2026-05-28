@@ -1,0 +1,28 @@
+# Mobile
+mobile-app/node_modules/
+mobile-app/.expo/
+mobile-app/android/build/
+mobile-app/android/.gradle/
+mobile-app/ios/Pods/
+mobile-app/ios/build/
+mobile-app/*.keystore
+
+# Backend
+backend/.env
+backend/agroverify-backend
+
+# AI Models
+ai-models/__pycache__/
+ai-models/*.pyc
+ai-models/venv/
+ai-models/.venv/
+ai-models/datasets/
+ai-models/checkpoints/
+ai-models/exports/*.tflite
+ai-models/exports/*.onnx
+
+# General
+.DS_Store
+*.log
+*.env
+.env.local
