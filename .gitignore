@@ -1,28 +1,40 @@
-# Mobile
-mobile-app/node_modules/
-mobile-app/.expo/
+# Flutter / Dart
+mobile-app/.dart_tool/
+mobile-app/.flutter-plugins
+mobile-app/build/
 mobile-app/android/build/
 mobile-app/android/.gradle/
+mobile-app/android/local.properties
+mobile-app/android/key.properties
+mobile-app/*.keystore
 mobile-app/ios/Pods/
 mobile-app/ios/build/
-mobile-app/*.keystore
+mobile-app/.flutter-plugins-dependencies
 
-# Backend
+# Backend (Python)
 backend/.env
-backend/agroverify-backend
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.pyc
+backend/.venv/
+backend/venv/
 
 # AI Models
 ai-models/__pycache__/
+ai-models/**/__pycache__/
 ai-models/*.pyc
 ai-models/venv/
 ai-models/.venv/
 ai-models/datasets/
 ai-models/checkpoints/
-ai-models/exports/*.tflite
-ai-models/exports/*.onnx
+
+# Model files (large binaries — downloaded via convert scripts)
+mobile-app/assets/models/*.tflite
+mobile-app/assets/models/*.json
 
 # General
 .DS_Store
 *.log
 *.env
 .env.local
+Thumbs.db
