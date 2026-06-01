@@ -1,0 +1,73 @@
+name: agroverify_edge
+description: Offline-first multimodal agricultural supply chain verification platform.
+publish_to: none
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Navigation
+  go_router: ^13.2.0
+
+  # State management
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+
+  # Database (AES-256 encrypted SQLite via SQLCipher)
+  sqflite_sqlcipher: ^2.0.0
+  path: ^1.9.0
+  path_provider: ^2.1.3
+
+  # Crypto & identity
+  crypto: ^3.0.3
+  uuid: ^4.4.0
+
+  # Secure storage (Android Keystore backed)
+  flutter_secure_storage: ^9.2.2
+
+  # Networking
+  dio: ^5.4.3+1
+  connectivity_plus: ^6.0.3
+
+  # GPS
+  geolocator: ^11.0.0
+
+  # Camera / image
+  image_picker: ^1.1.2
+  flutter_image_compress: ^2.2.0
+
+  # Background sync (Android WorkManager)
+  workmanager: ^0.5.2
+
+  # On-device AI
+  tflite_flutter: ^0.10.4
+  image: ^4.2.0
+
+  # Audio recording (voice input)
+  record: ^5.1.2
+
+  # FFT for mel-spectrogram preprocessing (Whisper)
+  fftea: ^1.5.0+1
+
+  # Permissions
+  permission_handler: ^11.3.1
+
+  # UI utilities
+  intl: ^0.19.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  build_runner: ^2.4.9
+  riverpod_generator: ^2.4.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/models/

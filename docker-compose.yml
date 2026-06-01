@@ -25,11 +25,12 @@ services:
       dockerfile: Dockerfile
     container_name: agroverify_backend
     environment:
-      PORT: 8080
-      DATABASE_URL: postgres://agroverify:password@postgres:5432/agroverify_edge?sslmode=disable
-      JWT_SECRET: change-me-in-production
+      DATABASE_URL: postgresql+asyncpg://agroverify:password@postgres:5432/agroverify_edge
+      SECRET_KEY: change-me-in-production
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 480
     ports:
-      - "8080:8080"
+      - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy

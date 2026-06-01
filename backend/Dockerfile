@@ -1,14 +1,11 @@
-FROM golang:1.23-alpine AS builder
+FROM python:3.12-slim
 
 WORKDIR /app
-COPY go.mod go.sum ./
-RUN go mod download
-COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o /agroverify-backend ./cmd/server
 
-FROM alpine:3.20
-RUN apk --no-cache add ca-certificates tzdata
-WORKDIR /root/
-COPY --from=builder /agroverify-backend .
-EXPOSE 8080
-CMD ["./agroverify-backend"]
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 8000
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
