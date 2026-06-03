@@ -177,23 +177,33 @@ def _download_one(url: str, dest: Path) -> bool:
 # Bing image supplement (icrawler)
 # ---------------------------------------------------------------------------
 
-def _bing_supplement(keyword: str, out_dir: Path, count: int) -> None:
-    """Download `count` images from Bing for `keyword` into `out_dir`."""
-    try:
-        from icrawler.builtin import BingImageCrawler
-        crawler = BingImageCrawler(
-            downloader_threads=4,
-            storage={"root_dir": str(out_dir)},
-        )
-        crawler.crawl(
-            keyword=keyword,
-            max_num=count,
-            min_size=(MIN_EDGE_PX, MIN_EDGE_PX),
-        )
-    except ImportError:
-        print("    icrawler not found — run: pip install icrawler")
-    except Exception as exc:
-        print(f"    Bing crawl error: {exc}")
+def _bing_supplement(keyword: str, out_dir: Path, count: int, timeout: int = 120) -> None:
+    """Download `count` images from Bing for `keyword` into `out_dir`.
+    Hard timeout prevents icrawler hanging indefinitely."""
+    import threading
+
+    def _crawl():
+        try:
+            from icrawler.builtin import BingImageCrawler
+            crawler = BingImageCrawler(
+                downloader_threads=2,
+                storage={"root_dir": str(out_dir)},
+            )
+            crawler.crawl(
+                keyword=keyword,
+                max_num=count,
+                min_size=(MIN_EDGE_PX, MIN_EDGE_PX),
+            )
+        except ImportError:
+            print("    icrawler not found — run: pip install icrawler")
+        except Exception as exc:
+            print(f"    Bing crawl error: {exc}")
+
+    t = threading.Thread(target=_crawl, daemon=True)
+    t.start()
+    t.join(timeout=timeout)
+    if t.is_alive():
+        print(f"    Bing crawl timed out after {timeout}s — continuing with iNaturalist images only")
 
 
 # ---------------------------------------------------------------------------
