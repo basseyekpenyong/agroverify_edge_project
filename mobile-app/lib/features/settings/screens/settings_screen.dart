@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/auth/rbac.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../sync/services/sync_service.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -33,17 +34,26 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ],
           const Divider(),
-          const _SectionHeader('App'),
+          const _SectionHeader('Backend API'),
           ListTile(
-            leading: const Icon(Icons.info_outline),
-            title: const Text('Version'),
-            trailing: const Text('1.0.0', style: TextStyle(color: AppColors.textSecondary)),
+            leading: const Icon(Icons.cloud_outlined),
+            title: const Text('API Configuration'),
+            subtitle: const Text('Set backend URL and auth token'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _showApiConfigDialog(context),
           ),
-          ListTile(
-            leading: const Icon(Icons.storage),
-            title: const Text('Local Database'),
-            subtitle: const Text('AES-256 encrypted SQLite'),
-            trailing: const Icon(Icons.lock, color: AppColors.primary, size: 18),
+          const Divider(),
+          const _SectionHeader('App'),
+          const ListTile(
+            leading: Icon(Icons.info_outline),
+            title: Text('Version'),
+            trailing: Text('1.0.0', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          const ListTile(
+            leading: Icon(Icons.storage),
+            title: Text('Local Database'),
+            subtitle: Text('AES-256 encrypted SQLite'),
+            trailing: Icon(Icons.lock, color: AppColors.primary, size: 18),
           ),
           const Divider(),
           ListTile(
@@ -53,6 +63,111 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showApiConfigDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (_) => const _ApiConfigDialog(),
+    );
+  }
+}
+
+class _ApiConfigDialog extends StatefulWidget {
+  const _ApiConfigDialog();
+
+  @override
+  State<_ApiConfigDialog> createState() => _ApiConfigDialogState();
+}
+
+class _ApiConfigDialogState extends State<_ApiConfigDialog> {
+  final _urlCtrl = TextEditingController();
+  final _tokenCtrl = TextEditingController();
+  bool _loading = true;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final config = await SyncService.loadApiConfig();
+    if (!mounted) return;
+    _urlCtrl.text = config.baseUrl;
+    _tokenCtrl.text = config.token;
+    setState(() => _loading = false);
+  }
+
+  @override
+  void dispose() {
+    _urlCtrl.dispose();
+    _tokenCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    setState(() => _saving = true);
+    await SyncService.saveApiConfig(
+      baseUrl: _urlCtrl.text.trim(),
+      token: _tokenCtrl.text.trim(),
+    );
+    if (mounted) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('API configuration saved'), backgroundColor: AppColors.primary),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('API Configuration'),
+      content: _loading
+          ? const SizedBox(height: 80, child: Center(child: CircularProgressIndicator()))
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: _urlCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Backend URL',
+                    hintText: 'http://192.168.1.x:8000',
+                    border: OutlineInputBorder(),
+                    helperText: 'Use your computer\'s local IP for device testing',
+                  ),
+                  keyboardType: TextInputType.url,
+                  autocorrect: false,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _tokenCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Auth Token (optional)',
+                    hintText: 'Bearer token from /api/v1/auth/login',
+                    border: OutlineInputBorder(),
+                  ),
+                  obscureText: true,
+                  autocorrect: false,
+                ),
+              ],
+            ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: (_loading || _saving) ? null : _save,
+          style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
+          child: _saving
+              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+              : const Text('Save'),
+        ),
+      ],
     );
   }
 }

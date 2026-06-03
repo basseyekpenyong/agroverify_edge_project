@@ -14,8 +14,8 @@ class AudioRecorderService {
     await _recorder.start(
       const RecordConfig(
         encoder: AudioEncoder.wav,
-        sampleRate: 16000, // Whisper requires 16kHz
-        numChannels: 1,    // Mono
+        sampleRate: 16000,
+        numChannels: 1,
         bitRate: 256000,
       ),
       path: path,
