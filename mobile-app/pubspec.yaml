@@ -41,7 +41,7 @@ dependencies:
   flutter_image_compress: ^2.2.0
 
   # Background sync (Android WorkManager)
-  workmanager: ^0.5.2
+  workmanager: ^0.9.0
 
   # On-device AI
   tflite_flutter: ^0.12.0
