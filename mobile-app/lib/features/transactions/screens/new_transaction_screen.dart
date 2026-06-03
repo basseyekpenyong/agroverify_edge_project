@@ -6,6 +6,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/commodities.dart';
 import '../../../core/database/transaction_dao.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../providers/transaction_provider.dart';
 import '../../voice/services/whisper_service.dart';
 import '../../voice/widgets/voice_input_button.dart';
 
@@ -84,6 +85,8 @@ class _NewTransactionScreenState extends ConsumerState<NewTransactionScreen> {
         agentId: agent!.id,
         notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
       );
+      ref.invalidate(allTransactionsProvider);
+      ref.invalidate(pendingTransactionsProvider);
       if (mounted) context.pop();
     } catch (e) {
       if (mounted) {
