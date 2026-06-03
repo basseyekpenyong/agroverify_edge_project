@@ -67,9 +67,10 @@ class _PhotoCaptureScreenState extends ConsumerState<PhotoCaptureScreen> {
       final finalPath = compressed?.path ?? picked.path;
 
       // Run commodity classification if image type is 'commodity'
+      ClassificationResult? aiResult;
       if (_imageType == 'commodity' && _classifier.isAvailable) {
-        final result = await _classifier.classify(finalPath);
-        if (mounted) setState(() => _classificationResult = result);
+        aiResult = await _classifier.classify(finalPath);
+        if (mounted) setState(() => _classificationResult = aiResult);
       }
 
       final dao = ImageDao.fromSingleton();
@@ -81,8 +82,15 @@ class _PhotoCaptureScreenState extends ConsumerState<PhotoCaptureScreen> {
       );
 
       if (mounted) {
+        final msg = aiResult != null
+            ? 'AI detected: ${aiResult.label} (${(aiResult.confidence * 100).toStringAsFixed(0)}%)'
+            : 'Photo saved';
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Photo saved'), backgroundColor: AppColors.primary),
+          SnackBar(
+            content: Text(msg),
+            backgroundColor: AppColors.primary,
+            duration: const Duration(seconds: 4),
+          ),
         );
         Navigator.of(context).pop(true);
       }

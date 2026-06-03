@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image/image.dart' as img;
@@ -28,8 +29,9 @@ class ImageClassifierService {
       final modelData = await rootBundle.load(_modelAsset);
       _interpreter = Interpreter.fromBuffer(modelData.buffer.asUint8List());
       _isLoaded = true;
-    } catch (_) {
-      // Model file not yet present — expected during development
+      debugPrint('[Classifier] Loaded OK. Input: ${_interpreter!.getInputTensor(0).shape}');
+    } catch (e, st) {
+      debugPrint('[Classifier] Load failed: $e\n$st');
       _isLoaded = false;
     }
   }

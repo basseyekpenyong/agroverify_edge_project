@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:fftea/fftea.dart';
@@ -51,7 +52,9 @@ class WhisperService {
       _vocab = Map<String, String>.from(jsonDecode(vocabJson));
 
       _isLoaded = true;
-    } catch (_) {
+      debugPrint('[Whisper] Model loaded. Input: ${_interpreter!.getInputTensor(0).shape} Output: ${_interpreter!.getOutputTensor(0).shape}');
+    } catch (e, st) {
+      debugPrint('[Whisper] Load failed: $e\n$st');
       _isLoaded = false;
     }
   }
@@ -62,13 +65,19 @@ class WhisperService {
     if (!isAvailable) return null;
     try {
       final audioBytes = await File(wavPath).readAsBytes();
+      debugPrint('[Whisper] WAV bytes: ${audioBytes.length}');
       final samples = _decodeWav(audioBytes);
+      debugPrint('[Whisper] PCM samples: ${samples.length}');
       final mel = _computeMelSpectrogram(samples);
       final outputSize = _interpreter!.getOutputTensor(0).shape.reduce((a, b) => a * b);
       final output = List.filled(outputSize, 0).reshape(_interpreter!.getOutputTensor(0).shape);
+      debugPrint('[Whisper] Running inference...');
       _interpreter!.run(mel, output);
-      return _decodeTokens(output);
-    } catch (_) {
+      final text = _decodeTokens(output);
+      debugPrint('[Whisper] Transcript: "$text"');
+      return text;
+    } catch (e, st) {
+      debugPrint('[Whisper] Transcribe failed: $e\n$st');
       return null;
     }
   }
