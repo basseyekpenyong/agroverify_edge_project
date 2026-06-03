@@ -1,0 +1,10 @@
+maize
+cassava
+sorghum
+rice
+soy
+groundnuts
+yam
+millet
+cocoa
+palm_oil

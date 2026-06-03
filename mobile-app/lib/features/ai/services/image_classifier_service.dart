@@ -62,17 +62,19 @@ class ImageClassifierService {
     }
   }
 
-  /// Resize to 224×224, normalize to [0, 1] float32.
+  /// Resize to 224×224, apply ImageNet mean/std normalization (matches training).
   List<List<List<List<double>>>> _preprocess(img.Image image) {
+    const mean = [0.485, 0.456, 0.406];
+    const std  = [0.229, 0.224, 0.225];
     final resized = img.copyResize(image, width: _inputSize, height: _inputSize);
     return List.generate(1, (_) =>
       List.generate(_inputSize, (y) =>
         List.generate(_inputSize, (x) {
           final pixel = resized.getPixel(x, y);
           return [
-            pixel.r / 255.0,
-            pixel.g / 255.0,
-            pixel.b / 255.0,
+            (pixel.r / 255.0 - mean[0]) / std[0],
+            (pixel.g / 255.0 - mean[1]) / std[1],
+            (pixel.b / 255.0 - mean[2]) / std[2],
           ];
         }),
       ),
