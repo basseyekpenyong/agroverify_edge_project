@@ -18,6 +18,7 @@ Future<Database> openAppDatabase(String encryptionKey) async {
     version: _dbVersion,
     password: encryptionKey,
     onCreate: _onCreate,
+    onOpen: _seedIfEmpty,
   );
 
   return _db!;
@@ -26,6 +27,21 @@ Future<Database> openAppDatabase(String encryptionKey) async {
 Database getDatabase() {
   if (_db == null) throw StateError('Database not initialised. Call openAppDatabase() first.');
   return _db!;
+}
+
+Future<void> _seedIfEmpty(Database db) async {
+  final rows = await db.query('agents', limit: 1);
+  if (rows.isNotEmpty) return;
+  await db.insert('agents', {
+    'id': 'agent-dev-001',
+    'name': 'Bassey Ekpenyong',
+    'pin_hash': '1234',
+    'region': 'Lagos',
+    'cooperative_id': 'COOP-001',
+    'role': 'field_agent',
+    'last_active': DateTime.now().toUtc().toIso8601String(),
+    'created_at': DateTime.now().toUtc().toIso8601String(),
+  });
 }
 
 Future<void> _onCreate(Database db, int version) async {
@@ -118,6 +134,18 @@ Future<void> _onCreate(Database db, int version) async {
   batch.execute('CREATE INDEX idx_txn_agent ON transactions(agent_id)');
   batch.execute('CREATE INDEX idx_images_txn ON transaction_images(transaction_id)');
   batch.execute('CREATE INDEX idx_queue_status ON sync_queue(status)');
+
+  // Seed a development agent for testing (PIN: 1234)
+  batch.insert('agents', {
+    'id': 'agent-dev-001',
+    'name': 'Bassey Ekpenyong',
+    'pin_hash': '1234',
+    'region': 'Lagos',
+    'cooperative_id': 'COOP-001',
+    'role': 'field_agent',
+    'last_active': DateTime.now().toUtc().toIso8601String(),
+    'created_at': DateTime.now().toUtc().toIso8601String(),
+  });
 
   await batch.commit(noResult: true);
 }
