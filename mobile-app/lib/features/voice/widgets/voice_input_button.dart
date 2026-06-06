@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../../core/constants/app_colors.dart';
-import '../services/audio_recorder_service.dart';
 import '../services/whisper_service.dart';
 
-enum _VoiceState { idle, recording, processing }
+enum _VoiceState { idle, recording }
 
 class VoiceInputButton extends StatefulWidget {
   final WhisperLanguage language;
@@ -24,9 +23,10 @@ class VoiceInputButton extends StatefulWidget {
 
 class _VoiceInputButtonState extends State<VoiceInputButton>
     with SingleTickerProviderStateMixin {
-  final _recorder = AudioRecorderService();
   final _whisper = WhisperService();
   _VoiceState _state = _VoiceState.idle;
+  bool _sttChecked = false;
+  bool _sttAvailable = false;
   late AnimationController _pulse;
 
   @override
@@ -34,26 +34,32 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
     super.initState();
     _pulse = AnimationController(vsync: this, duration: const Duration(milliseconds: 800))
       ..repeat(reverse: true);
-    _whisper.load();
+    // Lazy-load: don't initialize on widget creation, only on first tap.
   }
 
   @override
   void dispose() {
     _pulse.dispose();
-    _recorder.dispose();
     _whisper.dispose();
     super.dispose();
   }
 
-  Future<void> _onTap() async {
-    if (_state == _VoiceState.processing) return;
+  Future<void> _ensureLoaded() async {
+    if (_sttChecked) return;
+    await _whisper.load();
+    if (mounted) setState(() { _sttChecked = true; _sttAvailable = _whisper.isAvailable; });
+  }
 
+  Future<void> _onTap() async {
     if (_state == _VoiceState.recording) {
-      await _stopAndTranscribe();
+      await _whisper.stopListening();
+      if (mounted) setState(() => _state = _VoiceState.idle);
       return;
     }
 
-    // Check microphone permission
+    await _ensureLoaded();
+    if (!_sttAvailable) return; // button hidden via build(); guard just in case
+
     final status = await Permission.microphone.request();
     if (!status.isGranted) {
       if (mounted) {
@@ -65,62 +71,33 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
     }
 
     setState(() => _state = _VoiceState.recording);
-    await _recorder.startRecording();
-  }
-
-  Future<void> _stopAndTranscribe() async {
-    setState(() => _state = _VoiceState.processing);
-    final wavPath = await _recorder.stopRecording();
-
-    if (wavPath == null) {
-      setState(() => _state = _VoiceState.idle);
-      return;
-    }
-
-    if (!_whisper.isAvailable) {
-      // Model not loaded — show placeholder message
+    await _whisper.startListening(widget.language, (transcript) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Voice model not yet loaded. Recording saved — will transcribe when model is ready.'),
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
-      setState(() => _state = _VoiceState.idle);
-      return;
-    }
-
-    final transcript = await _whisper.transcribe(wavPath, widget.language);
-    if (mounted) {
-      if (transcript != null && transcript.isNotEmpty) {
         widget.onTranscript(transcript);
+        setState(() => _state = _VoiceState.idle);
       }
-      setState(() => _state = _VoiceState.idle);
-    }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    // Hide button entirely before we've checked, or if STT is unavailable.
+    if (_sttChecked && !_sttAvailable) return const SizedBox.shrink();
+
     return GestureDetector(
       onTap: _onTap,
       child: Padding(
         padding: const EdgeInsets.all(8),
-        child: _state == _VoiceState.processing
-            ? const SizedBox(
-                width: 20, height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
-              )
-            : AnimatedBuilder(
-                animation: _pulse,
-                builder: (_, __) => Icon(
-                  _state == _VoiceState.recording ? Icons.stop_circle : Icons.mic_none,
-                  size: 24,
-                  color: _state == _VoiceState.recording
-                      ? Color.lerp(AppColors.error, Colors.red.shade900, _pulse.value)!
-                      : AppColors.textSecondary,
-                ),
-              ),
+        child: AnimatedBuilder(
+          animation: _pulse,
+          builder: (_, __) => Icon(
+            _state == _VoiceState.recording ? Icons.stop_circle : Icons.mic_none,
+            size: 24,
+            color: _state == _VoiceState.recording
+                ? Color.lerp(AppColors.error, Colors.red.shade900, _pulse.value)!
+                : AppColors.textSecondary,
+          ),
+        ),
       ),
     );
   }

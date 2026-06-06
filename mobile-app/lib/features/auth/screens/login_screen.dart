@@ -45,10 +45,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Icon(Icons.agriculture, size: 72, color: AppColors.primary),
-              const SizedBox(height: 16),
+              ClipRect(
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  heightFactor: 0.58,
+                  child: Image.asset('assets/images/logo.png', height: 190),
+                ),
+              ),
+              const SizedBox(height: 8),
               Text(
-                'AgroVerify Edge',
+                'AgroVy',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,

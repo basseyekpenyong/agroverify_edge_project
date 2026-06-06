@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/auth/screens/login_screen.dart';
+import '../../features/auth/screens/device_setup_screen.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/transactions/screens/new_transaction_screen.dart';
 import '../../features/transactions/screens/transaction_list_screen.dart';
@@ -12,17 +13,31 @@ import '../../features/settings/screens/settings_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
+  final setupCheck = ref.watch(isDeviceSetupProvider);
 
   return GoRouter(
     initialLocation: '/login',
     redirect: (context, state) {
+      // Wait for the setup check to resolve before redirecting.
+      if (setupCheck.isLoading) return null;
+
       final isAuthenticated = authState.value?.isAuthenticated ?? false;
-      final isLoginRoute = state.matchedLocation == '/login';
-      if (!isAuthenticated && !isLoginRoute) return '/login';
-      if (isAuthenticated && isLoginRoute) return '/home';
+      final deviceConfigured = setupCheck.value ?? false;
+      final loc = state.matchedLocation;
+
+      // Authenticated users always go to home.
+      if (isAuthenticated && (loc == '/login' || loc == '/setup')) return '/home';
+
+      // Device not yet set up — go to setup screen.
+      if (!deviceConfigured && loc != '/setup') return '/setup';
+
+      // Device set up but not logged in — go to login.
+      if (deviceConfigured && !isAuthenticated && loc != '/login') return '/login';
+
       return null;
     },
     routes: [
+      GoRoute(path: '/setup', builder: (_, __) => const DeviceSetupScreen()),
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
       ShellRoute(
         builder: (context, state, child) => MainShell(child: child),

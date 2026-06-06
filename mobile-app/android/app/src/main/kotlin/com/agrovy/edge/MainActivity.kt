@@ -1,4 +1,4 @@
-package com.example.agroverify_edge
+package com.agrovy.edge
 
 import io.flutter.embedding.android.FlutterActivity
 

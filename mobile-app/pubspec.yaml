@@ -1,5 +1,5 @@
 name: agroverify_edge
-description: Offline-first multimodal agricultural supply chain verification platform.
+description: AgroVy — offline-first agricultural supply chain verification platform.
 publish_to: none
 version: 1.0.0+1
 
@@ -50,8 +50,8 @@ dependencies:
   # Audio recording (voice input)
   record: ^6.0.0
 
-  # FFT for mel-spectrogram preprocessing (Whisper)
-  fftea: ^1.5.0+1
+  # On-device speech-to-text (replaces broken encoder-only TFLite Whisper)
+  speech_to_text: ^7.0.0
 
   # Permissions
   permission_handler: ^11.3.1
@@ -65,9 +65,19 @@ dev_dependencies:
   flutter_lints: ^4.0.0
   build_runner: ^2.4.9
   riverpod_generator: ^2.4.0
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/images/icon.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#16A34A"
+  adaptive_icon_foreground: "assets/images/icon.png"
 
 flutter:
   uses-material-design: true
 
   assets:
     - assets/models/
+    - assets/images/
